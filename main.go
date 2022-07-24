@@ -199,7 +199,7 @@ func dump(api *slack.Client, dir string, rooms []string) {
 		} else if c.IsChannel && !c.IsGroup && !c.IsPrivate {
 			kind = "channel"
 			name = c.Name
-		} else if (!c.IsChannel && !c.IsGroup) || c.IsPrivate) {
+		} else if (!c.IsChannel && !c.IsGroup) || c.IsPrivate {
 			kind = "private_channel"
 			name = c.Name
 		}
