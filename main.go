@@ -212,6 +212,13 @@ func dump(api *slack.Client, dir string, rooms []string) {
 		}
 	}
 
+	// Need to fix Members since it is empty by default
+
+	for i := 0; i < len(channels); i++ {
+	        members := fetchMembers(api, channels[i].ID)
+		channels[i].Members = members
+	}
+
 	data_channels, err := MarshalIndent(channels, "", "    ")
 	check(err)
 	err = ioutil.WriteFile(path.Join(dir, "channels.json"), data_channels, 0644)
@@ -221,6 +228,34 @@ func dump(api *slack.Client, dir string, rooms []string) {
 	check(err)
 	err = ioutil.WriteFile(path.Join(dir, "users.json"), data_users, 0644)
 	check(err)
+}
+
+func fetchMembers(api *slack.Client, channelID string) []string {
+	convParams := slack.GetUsersInConversationParameters{}
+	convParams.ChannelID = channelID
+	convParams.Limit = 1000
+
+        members, nextCursor, err := api.GetUsersInConversation(&convParams)
+	check(err)
+
+	if len(members) > 0 {
+		for {
+			if nextCursor == "" {
+				break
+			}
+
+			convParams.Cursor = nextCursor
+			ms, nextCursor, err := api.GetUsersInConversation(&convParams)
+			check(err)
+			length := len(ms)
+			if length > 0 {
+				convParams.Cursor = nextCursor
+				members = append(members, ms...)
+			}
+		}
+	}
+
+        return members
 }
 
 func fetchChannel(api *slack.Client) []slack.Channel {
